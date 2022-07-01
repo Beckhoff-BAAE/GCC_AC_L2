@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_LevelSensors" Id="{9d0611cb-81b7-4f7a-b2c6-020c88227f2d}">
+    <Declaration><![CDATA[TYPE ST_LevelSensors :
+STRUCT
+	Low,
+	Mid,
+	High :BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

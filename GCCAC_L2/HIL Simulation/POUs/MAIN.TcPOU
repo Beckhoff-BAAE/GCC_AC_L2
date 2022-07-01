@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="MAIN" Id="{ca104f89-1b60-4670-b34e-7abdaf68ebfc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	RequestedFloor AT%I*:INT;
+	CurrentFloor AT%I*:INT;
+	Motor AT%I*:ST_Motor;
+	
+	//BT_FloorCall AT %Q*:ARRAY[1..3]	OF	BOOL;
+	LS_Floor AT %Q*:ARRAY[1..3]	OF	ST_LevelSensors;
+	state: INT;
+	nextState: INT;
+	Timer:TON;
+	TransitionTime:TIME:=T#3S;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF	CurrentFloor=0 	THEN
+	CurrentFloor:=1;
+END_IF
+IF	CurrentFloor>3	THEN
+	CurrentFloor:=3;
+END_IF
+
+IF	RequestedFloor=0	THEN
+	RequestedFloor:=1;
+END_IF
+
+
+
+IF	CurrentFloor>RequestedFloor	THEN
+	//move down
+	IF	NOT(state>=21 AND state<=211)	THEN
+		state:=21;
+	END_IF
+ELSIF	CurrentFloor < RequestedFloor	THEN
+	//moveUp
+	IF	NOT(state>=1 AND state<=11)	THEN
+		state:=1;
+	END_IF
+ELSE
+	//arrive on the level
+	IF	NOT(state>=13	AND	state<=15)	THEN
+		state:=12;		
+	END_IF
+
+END_IF
+
+CASE	state OF
+	1:
+		LS_Floor[CurrentFloor].Mid:=FALSE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	2:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	3:
+		LS_Floor[CurrentFloor].High:=TRUE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	4:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	5:
+		LS_Floor[CurrentFloor].High:=FALSE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	6:
+		Timer(IN:= TRUE, PT:= TransitionTime );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	7:
+		LS_Floor[CurrentFloor+1].Low:=TRUE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	8:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	9:
+		LS_Floor[CurrentFloor].Low:=FALSE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	10:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	11:
+		LS_Floor[CurrentFloor].Mid:=TRUE;
+		state:=1;
+		Timer(IN:= FALSE );
+END_CASE
+
+CASE	state OF
+	21:
+		LS_Floor[CurrentFloor].Mid:=FALSE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	22:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	23:
+		LS_Floor[CurrentFloor].Low:=TRUE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	24:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	25:
+		LS_Floor[CurrentFloor].Low:=FALSE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	26:
+		Timer(IN:= TRUE, PT:= TransitionTime);
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	27:
+		LS_Floor[CurrentFloor-1].High:=TRUE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	28:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	29:
+		LS_Floor[CurrentFloor].High:=FALSE;
+		state:=state+210;
+		Timer(IN:= FALSE );
+	210:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	211:
+		LS_Floor[CurrentFloor].Mid:=TRUE;
+		state:=21;
+		Timer(IN:= FALSE );
+END_CASE
+
+CASE	state OF
+	12:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	13:
+		LS_Floor[CurrentFloor].Low:=
+		LS_Floor[CurrentFloor].High:=FALSE;
+		state:=state+1;
+		Timer(IN:= FALSE );
+	14:
+		Timer(IN:= TRUE, PT:= T#500MS );
+		IF	timer.Q	THEN
+			state:=state+1;
+		END_IF
+	15:
+		LS_Floor[CurrentFloor].Mid:=TRUE;
+		state:=12;
+		Timer(IN:= FALSE );
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="203" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="209" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="214" Count="1" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="206" Count="1" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="136" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="36" Count="10" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="48" Count="2" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="52" Count="3" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="58" Count="2" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="62" Count="3" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="73" Count="3" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="77" Count="2" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="85" Count="50" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="149" Count="6" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="156" Count="10" />
+      <LineId Id="83" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
